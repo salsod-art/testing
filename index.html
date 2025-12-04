@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Speech to German Translator</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+        button { padding: 10px 20px; font-size: 16px; }
+        .box { margin-top: 20px; padding: 15px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<h2>🎤 Speak and Translate to German</h2>
+<button id="startBtn">Start Speaking</button>
+
+<div class="box">
+    <h3>Recognized Speech:</h3>
+    <p id="speechText">...</p>
+</div>
+
+<div class="box">
+    <h3>German Translation:</h3>
+    <p id="translationText">...</p>
+</div>
+
+<script>
+    // --- SPEECH RECOGNITION SETUP ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";  // language you speak
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    const startBtn = document.getElementById("startBtn");
+    const speechText = document.getElementById("speechText");
+    const translationText = document.getElementById("translationText");
+
+    startBtn.onclick = () => {
+        recognition.start();
+        startBtn.innerText = "Listening...";
+    };
+
+    // When speech is recognized
+    recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        speechText.textContent = text;
+        translateToGerman(text);
+    };
+
+    recognition.onend = () => {
+        startBtn.innerText = "Start Speaking";
+    };
+
+    // --- TRANSLATION FUNCTION ---
+    async function translateToGerman(text) {
+        translationText.textContent = "Translating...";
+
+        try {
+            const response = await fetch("https://libretranslate.com/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    q: text,
+                    source: "en",
+                    target: "de",
+                    format: "text"
+                })
+            });
+
+            const data = await response.json();
+            translationText.textContent = data.translatedText;
+        } catch (err) {
+            translationText.textContent = "Translation error.";
+            console.error(err);
+        }
+    }
+</script>
+
+</body>
+</html>
